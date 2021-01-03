@@ -9,7 +9,7 @@ with open(config_file) as f:
     config.read_file(f)
 
 def on_success(record_data):
-    print(f"Sent: record_data")
+    print(f"Sent: {record_data}")
 
 def on_error(e):
     print(e)
@@ -20,11 +20,11 @@ def main():
         value_serializer=lambda v: json.dumps(v).encode('utf-8'),
     )
 
-    with open(sys.argv[1]) as input:
-        data = json.load(input)
-        print(data)
+    with open(sys.argv[1]) as f:
+        data = json.load(f)
 
-        p.send('raw_buildings', {'street_number': '25', 'street_name': 'Mabelle Ave.', 'postal_code': 'M9A 4Y1'}).add_callback(on_success).add_errback(on_error)
+        for address in data:
+            p.send('raw_buildings', address).add_callback(on_success).add_errback(on_error)
 
         p.flush()
 

@@ -41,13 +41,14 @@ class Consumer(threading.Thread):
         self.stop_event.set()
 
     def run(self):
-        consumer = KafkaConsumer(    
-            'enriched_buildings',
-            **config['kafka'],
-            auto_offset_reset="earliest",
-            group_id="app-endpoint",
-            value_deserializer=lambda v: json.loads(v),
-        )
+        try:
+            consumer = KafkaConsumer(    
+                'enriched_buildings',
+                **config['kafka'],
+                auto_offset_reset="earliest",
+                group_id="app-endpoint",
+                value_deserializer=lambda v: json.loads(v),
+            )
 
         Session = sessionmaker(db)
         session = Session()
