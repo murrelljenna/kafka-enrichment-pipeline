@@ -1,11 +1,36 @@
-from kafka import KafkaProducer, KafkaConsumer
+import sys
 import json
-import psycopg2
 import threading
 import configparser
 
+from kafka import KafkaProducer, KafkaConsumer
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy.orm import sessionmaker
+
+config_file = 'config.ini'
 config = configparser.ConfigParser()
+
+# ConfigParser will not throw error if file doesn't exist.
+# Opening config before passing to configparser will.
+with open(config_file) as f:
+    config.read_file(f)
+
 config.read('config.ini')
+args = config['postgresql']
+
+db = create_engine(f"postgresql://{args['user']}:{args['password']}@{args['host']}:{args['port']}/{args['database']}")
+Base = declarative_base()
+
+class Address(Base):
+    __tablename__ = 'address'
+    
+    id = Column(Integer, primary_key=True)
+    street_number = Column(String)
+    street_name = Column(String)
+    postal_code = Column(String)
+
+Base.metadata.create_all(db)
 
 class Consumer(threading.Thread):
     def __init__(self):
@@ -17,44 +42,35 @@ class Consumer(threading.Thread):
 
     def run(self):
         consumer = KafkaConsumer(    
-            'raw_buildings',
+            'enriched_buildings',
             **config['kafka'],
             auto_offset_reset="earliest",
-            group_id="osm-enricher",
+            group_id="app-endpoint",
             value_deserializer=lambda v: json.loads(v),
         )
+
+        Session = sessionmaker(db)
+        session = Session()
 
         while not self.stop_event.is_set():
             for message in consumer:
                 building = message.value
-                enriched_building = self.enrich(building)
-                print(enriched_building)
-                self.send(enriched_building)
+                self.send(session, building)
                 if self.stop_event.is_set():
                     break
 
+        session.close()
         consumer.close()
 
-    def enrich(self, building):
-        # Make API request to OSM to get extra building information.
-        return building
-
-    def send(self, building):
-        p = KafkaProducer(
-            **config['kafka'],
-            value_serializer=lambda v: json.dumps(v).encode('utf-8'),
-        )
-
-        p.send('enriched_buildings', building)
-        p.flush()
+    def send(self, session, building):
+        address = Address(**building)
+        session.add(address)
+        session.commit()
 
 def main():
     c = Consumer()
     c.start()
-
-    conn = psycopg2.connect(
-        **config['postgresql']
-    )
+    c.join()
 
 if __name__ == "__main__":
     main()
