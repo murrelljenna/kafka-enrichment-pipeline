@@ -26,19 +26,28 @@ def main():
     )
 
     try:
-        with open(sys.argv[1]) as f:
-            # Load our json file, send data for each to kafka.
-            data = json.load(f)
-
-            for address in data:
-                p.send("raw_buildings", address).add_callback(on_success).add_errback(
-                    on_error
-                )
-
-            p.flush()
+        sys.argv[1]
     except IndexError:
         print("Path to JSON file not specified as first argument")
         sys.exit(1)
+
+    with open(sys.argv[1]) as f:
+        # Load our json file, send data for each to kafka.
+        data = json.load(f)
+
+        for address in data:
+            try:
+                # Send only the keys we're looking for.
+                processed_address = {'street_number': address['street_number'], 'street_name': address['street_name'], 'postal_code': address['postal_code']}
+            except KeyError:
+                # Json entry is missing a key - don't bother sending.
+                continue
+
+            p.send("raw_buildings", processed_address).add_callback(on_success).add_errback(
+                on_error
+            )
+
+        p.flush()
 
 
 if __name__ == "__main__":
