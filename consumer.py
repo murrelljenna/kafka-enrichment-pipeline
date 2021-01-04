@@ -76,7 +76,6 @@ class Consumer(threading.Thread):
 def main():
     c = Consumer()
     c.start()
-    c.join()
 
 
 if __name__ == "__main__":

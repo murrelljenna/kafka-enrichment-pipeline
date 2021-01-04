@@ -21,12 +21,13 @@ def on_error(e):
 def main():
     p = KafkaProducer(
         **config["kafka"],
+        request_timeout_ms=1000,
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
     )
 
-    # Check that argument is provided here
     try:
         with open(sys.argv[1]) as f:
+            # Load our json file, send data for each to kafka.
             data = json.load(f)
 
             for address in data:
@@ -35,7 +36,7 @@ def main():
                 )
 
             p.flush()
-    except NameError:
+    except IndexError:
         print("Path to JSON file not specified as first argument")
         sys.exit(1)
 
