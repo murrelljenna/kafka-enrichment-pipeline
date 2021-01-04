@@ -26,6 +26,7 @@ def main():
     )
 
     try:
+        # Test that an argument has been provided.
         sys.argv[1]
     except IndexError:
         print("Path to JSON file not specified as first argument")
