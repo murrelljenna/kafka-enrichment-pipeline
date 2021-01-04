@@ -8,7 +8,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import sessionmaker
 
-config_file = 'config.ini'
+config_file = "config.ini"
 config = configparser.ConfigParser()
 
 # ConfigParser will not throw error if file doesn't exist.
@@ -16,21 +16,26 @@ config = configparser.ConfigParser()
 with open(config_file) as f:
     config.read_file(f)
 
-config.read('config.ini')
-args = config['postgresql']
+config.read("config.ini")
+args = config["postgresql"]
 
-db = create_engine(f"postgresql://{args['user']}:{args['password']}@{args['host']}:{args['port']}/{args['database']}")
+db = create_engine(
+    f"postgresql://{args['user']}:{args['password']}@{args['host']}:{args['port']}/{args['database']}"
+)
 Base = declarative_base()
 
+
 class Address(Base):
-    __tablename__ = 'address'
-    
+    __tablename__ = "address"
+
     id = Column(Integer, primary_key=True)
     street_number = Column(String)
     street_name = Column(String)
     postal_code = Column(String)
 
+
 Base.metadata.create_all(db)
+
 
 class Consumer(threading.Thread):
     def __init__(self):
@@ -41,14 +46,13 @@ class Consumer(threading.Thread):
         self.stop_event.set()
 
     def run(self):
-        try:
-            consumer = KafkaConsumer(    
-                'enriched_buildings',
-                **config['kafka'],
-                auto_offset_reset="earliest",
-                group_id="app-endpoint",
-                value_deserializer=lambda v: json.loads(v),
-            )
+        consumer = KafkaConsumer(
+            "enriched_buildings",
+            **config["kafka"],
+            auto_offset_reset="earliest",
+            group_id="app-endpoint",
+            value_deserializer=lambda v: json.loads(v),
+        )
 
         Session = sessionmaker(db)
         session = Session()
@@ -68,10 +72,12 @@ class Consumer(threading.Thread):
         session.add(address)
         session.commit()
 
+
 def main():
     c = Consumer()
     c.start()
     c.join()
+
 
 if __name__ == "__main__":
     main()
