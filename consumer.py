@@ -47,7 +47,7 @@ class Consumer(threading.Thread):
 
     def run(self):
         consumer = KafkaConsumer(
-            "enriched_buildings",
+            "enriched_address",
             **config["kafka"],
             auto_offset_reset="earliest",
             group_id="app-endpoint",
@@ -59,16 +59,17 @@ class Consumer(threading.Thread):
 
         while not self.stop_event.is_set():
             for message in consumer:
-                building = message.value
-                self.send(session, building)
+                raw_address = message.value
+                self.send(session, raw_address)
                 if self.stop_event.is_set():
                     break
 
         session.close()
         consumer.close()
 
-    def send(self, session, building):
-        address = Address(**building)
+    def send(self, session, raw_address):
+        print(str(raw_address))
+        address = Address(**raw_address)
         session.add(address)
         session.commit()
 

@@ -29,10 +29,8 @@ def main():
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
     )
 
-    try:
-        # Test that an argument has been provided.
-        sys.argv[1]
-    except IndexError:
+    # Test that an argument has been provided.
+    if len(sys.argv) < 2:
         print("Path to JSON file not specified as first argument")
         sys.exit(1)
 
@@ -44,11 +42,12 @@ def main():
             try:
                 # Send only the keys we're looking for.
                 processed_address = process_address(address)
+                print(str(processed_address))
             except KeyError:
                 # Json entry is missing a key - don't bother sending.
                 continue
 
-            producer.send("raw_buildings", processed_address).add_callback(on_success).add_errback(
+            producer.send("raw_address", processed_address).add_callback(on_success).add_errback(
                 on_error
             )
 

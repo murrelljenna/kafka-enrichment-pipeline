@@ -21,7 +21,7 @@ class Enricher(threading.Thread):
 
     def run(self):
         consumer = KafkaConsumer(
-            "raw_buildings",
+            "raw_address",
             **config["kafka"],
             auto_offset_reset="earliest",
             group_id="osm-enricher",
@@ -30,27 +30,28 @@ class Enricher(threading.Thread):
 
         while not self.stop_event.is_set():
             for message in consumer:
-                building = message.value
+                address = message.value
 
-                enriched_building = self.enrich(building)
+                enriched_address = self.enrich(address)
 
-                self.send(enriched_building)
+                self.send(enriched_address)
                 if self.stop_event.is_set():
                     break
 
         consumer.close()
 
-    def enrich(self, building):
-        # Make API request to OSM to get extra building information.
-        return building
+    def enrich(self, address):
+        # Make API request to OpenStreetMap to get extra building information.
+        return address
 
-    def send(self, building):
+    def send(self, address):
+        print(str(address))
         p = KafkaProducer(
             **config["kafka"],
             value_serializer=lambda v: json.dumps(v).encode("utf-8"),
         )
 
-        p.send("enriched_buildings", building)
+        p.send("enriched_address", address)
         p.flush()
 
 

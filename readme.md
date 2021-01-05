@@ -24,6 +24,13 @@ cp config-template.ini config.ini
 
 Edit config.ini and replace the defaults with authentication info for your kafka and postgresql instance.
 
+### Configuring Kafka
+
+In your kafka instance, add two topics under the following names:
+
+*raw\_address
+*enriched\_address
+
 ## Components
 
 The data passed through this pipeline is a three key object representing a street address. A street address used by this project contains exactly 3 fields and looks like the JSON object below.
