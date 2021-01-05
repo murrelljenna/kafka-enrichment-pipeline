@@ -42,16 +42,18 @@ This project includes 3 modules - a producer, an enricher and a consumer. Each m
 
 Run using `pipenv run producer.py [JSON_FILEPATH]`.
 
-Takes a path to a json file containing an array of JSON address objects (like the one above) and submits each one to the first of two kafka topics ('raw\_buildings', 'enriched\_buildings'). 
+Takes a path to a json file containing an array of JSON address objects (like the one above) and submits each one to the first of two kafka topics ('raw\_buildings', 'enriched\_buildings'). Runs once and ends once the last JSON object has been sent.
 
 ### enricher.py
 
 Run using `pipenv run enricher.py`.
 
-Reads from the first of the two kafka topics - 'raw\_buildings' and forwards to 'enriched\_buildings'. Actual data enrichment is not yet implemented - the idea is to make calls to the OpenStreetMaps API to get further information.
+Reads from the first of the two kafka topics - 'raw\_buildings' and forwards to 'enriched\_buildings'. Continually polls until keyboard interrupt.
+
+Actual data enrichment is not yet implemented - the idea is to make calls to the OpenStreetMaps API to get further information.
 
 ### consumer.py
 
 Run using `pipenv run consumer.py`
 
-Reads from the second kafka topic ('enriched\_buildings') and stores it in postgres database.
+Reads from the second kafka topic ('enriched\_buildings') and stores it in postgres database. Continually polls until keyboard interrupt.
