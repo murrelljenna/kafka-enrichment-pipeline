@@ -4,6 +4,7 @@ import psycopg2
 import threading
 import configparser
 
+
 class Enricher(threading.Thread):
     def __init__(self, config):
         threading.Thread.__init__(self)
@@ -27,6 +28,7 @@ class Enricher(threading.Thread):
                 address = message.value
 
                 enriched_address = self.enrich(address)
+                print(f"Received address: {str(raw_address)} from raw_address")
 
                 self.send(enriched_address)
                 if self.stop_event.is_set():
@@ -39,7 +41,7 @@ class Enricher(threading.Thread):
         return address
 
     def send(self, address):
-        print(str(address))
+        print(f"Sending address: {str(address)} to enriched_address")
         p = KafkaProducer(
             **self.config["kafka"],
             value_serializer=lambda v: json.dumps(v).encode("utf-8"),

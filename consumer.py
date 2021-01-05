@@ -46,6 +46,7 @@ class Consumer(threading.Thread):
         while not self.stop_event.is_set():
             for message in consumer:
                 raw_address = message.value
+                print(f"Received address: {str(raw_address)} from enriched_address")
                 self.send(session, raw_address)
                 if self.stop_event.is_set():
                     break
@@ -54,6 +55,7 @@ class Consumer(threading.Thread):
         consumer.close()
 
     def send(self, session, raw_address):
+        print(f"Sending address: {str(raw_address)} to postgres")
         address = Address(**raw_address)
         session.add(address)
         session.commit()

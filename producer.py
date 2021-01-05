@@ -3,16 +3,13 @@ import sys
 import configparser
 import json
 
-def on_success(record_data):
-    print(f"Received from JSON. Sent to: {record_data.topic}")
-
-
-def on_error(e):
-    print(e)
-
 # Returns a fresh dictionary made up just of the keys we want - extra key/values in the JSON will be cut off.
 def clean_address(address):
-    return {'street_number': address['street_number'], 'street_name': address['street_name'], 'postal_code': address['postal_code']}
+    return {
+        "street_number": address["street_number"],
+        "street_name": address["street_name"],
+        "postal_code": address["postal_code"],
+    }
 
 
 def main():
@@ -43,12 +40,14 @@ def main():
                 address = clean_address(address)
             except KeyError:
                 # Json entry is missing a key - don't bother sending.
-                print(f"Address object {str(address)} is missing a key and has been ignored")
+                print(
+                    f"Address object {str(address)} is missing a key and has been ignored"
+                )
                 continue
 
-            producer.send("raw_address", address).add_callback(on_success).add_errback(
-                on_error
-            )
+            print(f"Sending address {str(address)}")
+
+            producer.send("raw_address", address)
 
         producer.flush()
 
