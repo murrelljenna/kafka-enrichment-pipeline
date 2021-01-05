@@ -28,8 +28,8 @@ Edit config.ini and replace the defaults with authentication info for your kafka
 
 In your kafka instance, add two topics under the following names:
 
-*raw\_address
-*enriched\_address
+* raw\_address
+* enriched\_address
 
 If you are using Aiven, you can find out how to configure Kafka and add topics [here](https://help.aiven.io/en/articles/489572-getting-started-with-aiven-kafka).
 
@@ -40,11 +40,13 @@ This project assumes your kafka instance is using SSL. If so, you will need to d
 The data passed through this pipeline is a three key object representing a street address. A street address used by this project contains exactly 3 fields and looks like the JSON object below.
 
 ```
+[
     {
-        'street_number': '59',
-        'street_name': 'Sunnybrook',
-        'postal_code': 'M5P 7R2'
+        "street_number": "59",
+        "street_name": "Sunnybrook",
+        "postal_code": "M5P 7R2"
     }
+]
 ```
 
 This project includes 3 modules - a producer, an enricher and a consumer. Each module represents a node in an example data pipeline using kafka. Each module is run independently. All modules can be run at the same time, or run one after another.
@@ -78,6 +80,7 @@ No tests have yet been written for this project.
 Almost all non-trivial code in this project relates to accessing external resources - querying postgres, kafka, reading JSON or the config file. A future set of tests for this project might include:
 
 * An end-to-end test that sends an address to the raw\_address topic and queries the postgres endpoint for that address.
+* A unit test for JSON validation in producer.py
 
 ## Some Code Attributions
 
