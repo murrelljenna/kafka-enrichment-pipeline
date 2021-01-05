@@ -8,20 +8,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import sessionmaker
 
-config_file = "config.ini"
-config = configparser.ConfigParser()
 
-# ConfigParser will not throw error if file doesn't exist.
-# Opening config before passing to configparser will.
-with open(config_file) as f:
-    config.read_file(f)
-
-config.read("config.ini")
-args = config["postgresql"]
-
-db = create_engine(
-    f"postgresql://{args['user']}:{args['password']}@{args['host']}:{args['port']}/{args['database']}"
-)
 Base = declarative_base()
 
 
@@ -34,12 +21,11 @@ class Address(Base):
     postal_code = Column(String)
 
 
-Base.metadata.create_all(db)
-
-
 class Consumer(threading.Thread):
-    def __init__(self):
+    def __init__(self, config, engine):
         threading.Thread.__init__(self)
+        self.engine = engine
+        self.config = config
         self.stop_event = threading.Event()
 
     def stop(self):
@@ -48,13 +34,13 @@ class Consumer(threading.Thread):
     def run(self):
         consumer = KafkaConsumer(
             "enriched_address",
-            **config["kafka"],
+            **self.config["kafka"],
             auto_offset_reset="earliest",
             group_id="app-endpoint",
             value_deserializer=lambda v: json.loads(v),
         )
 
-        Session = sessionmaker(db)
+        Session = sessionmaker(self.engine)
         session = Session()
 
         while not self.stop_event.is_set():
@@ -68,14 +54,29 @@ class Consumer(threading.Thread):
         consumer.close()
 
     def send(self, session, raw_address):
-        print(str(raw_address))
         address = Address(**raw_address)
         session.add(address)
         session.commit()
 
 
 def main():
-    consumer = Consumer()
+    config_file = "config.ini"
+    config = configparser.ConfigParser()
+
+    # ConfigParser will not throw error if file doesn't exist.
+    # Opening config before passing to configparser will.
+    with open(config_file) as f:
+        config.read_file(f)
+
+    args = config["postgresql"]
+
+    db = create_engine(
+        f"postgresql://{args['user']}:{args['password']}@{args['host']}:{args['port']}/{args['database']}"
+    )
+
+    Base.metadata.create_all(db)
+
+    consumer = Consumer(config, db)
     consumer.start()
 
 

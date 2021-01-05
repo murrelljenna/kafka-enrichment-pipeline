@@ -4,16 +4,10 @@ import psycopg2
 import threading
 import configparser
 
-config_file = "config.ini"
-config = configparser.ConfigParser()
-
-with open(config_file) as f:
-    config.read_file(f)
-
-
 class Enricher(threading.Thread):
-    def __init__(self):
+    def __init__(self, config):
         threading.Thread.__init__(self)
+        self.config = config
         self.stop_event = threading.Event()
 
     def stop(self):
@@ -22,7 +16,7 @@ class Enricher(threading.Thread):
     def run(self):
         consumer = KafkaConsumer(
             "raw_address",
-            **config["kafka"],
+            **self.config["kafka"],
             auto_offset_reset="earliest",
             group_id="osm-enricher",
             value_deserializer=lambda v: json.loads(v),
@@ -47,7 +41,7 @@ class Enricher(threading.Thread):
     def send(self, address):
         print(str(address))
         p = KafkaProducer(
-            **config["kafka"],
+            **self.config["kafka"],
             value_serializer=lambda v: json.dumps(v).encode("utf-8"),
         )
 
@@ -56,7 +50,13 @@ class Enricher(threading.Thread):
 
 
 def main():
-    enricher = Enricher()
+    config_file = "config.ini"
+    config = configparser.ConfigParser()
+
+    with open(config_file) as f:
+        config.read_file(f)
+
+    enricher = Enricher(config)
     enricher.start()
 
 
