@@ -17,9 +17,13 @@ def on_success(record_data):
 def on_error(e):
     print(e)
 
+# Returns a fresh dictionary made up just of the keys we want - extra key/values in the JSON will be cut off.
+def process_address(address):
+    return {'street_number': address['street_number'], 'street_name': address['street_name'], 'postal_code': address['postal_code']}
+
 
 def main():
-    p = KafkaProducer(
+    producer = KafkaProducer(
         **config["kafka"],
         request_timeout_ms=1000,
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
@@ -39,16 +43,16 @@ def main():
         for address in data:
             try:
                 # Send only the keys we're looking for.
-                processed_address = {'street_number': address['street_number'], 'street_name': address['street_name'], 'postal_code': address['postal_code']}
+                processed_address = process_address(address)
             except KeyError:
                 # Json entry is missing a key - don't bother sending.
                 continue
 
-            p.send("raw_buildings", processed_address).add_callback(on_success).add_errback(
+            producer.send("raw_buildings", processed_address).add_callback(on_success).add_errback(
                 on_error
             )
 
-        p.flush()
+        producer.flush()
 
 
 if __name__ == "__main__":

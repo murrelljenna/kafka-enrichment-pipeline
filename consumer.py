@@ -56,8 +56,6 @@ class Consumer(threading.Thread):
 
         Session = sessionmaker(db)
         session = Session()
-        for address in session.query(Address):
-            print(str(address.street_number))
 
         while not self.stop_event.is_set():
             for message in consumer:
@@ -70,17 +68,14 @@ class Consumer(threading.Thread):
         consumer.close()
 
     def send(self, session, building):
-
-        print("Consumer: received")
-        print(str(building))
         address = Address(**building)
         session.add(address)
         session.commit()
 
 
 def main():
-    c = Consumer()
-    c.start()
+    consumer = Consumer()
+    consumer.start()
 
 
 if __name__ == "__main__":

@@ -45,8 +45,6 @@ class Enricher(threading.Thread):
         return building
 
     def send(self, building):
-        print("Enricher: received")
-        print(str(building))
         p = KafkaProducer(
             **config["kafka"],
             value_serializer=lambda v: json.dumps(v).encode("utf-8"),
@@ -57,8 +55,8 @@ class Enricher(threading.Thread):
 
 
 def main():
-    e = Enricher()
-    e.start()
+    enricher = Enricher()
+    enricher.start()
 
 
 if __name__ == "__main__":
