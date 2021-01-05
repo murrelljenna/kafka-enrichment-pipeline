@@ -1,4 +1,5 @@
 from kafka import KafkaProducer, KafkaConsumer
+import time
 import json
 import psycopg2
 import threading
@@ -27,8 +28,8 @@ class Enricher(threading.Thread):
             for message in consumer:
                 address = message.value
 
+                print(f"Received address: {str(address)} from raw_address")
                 enriched_address = self.enrich(address)
-                print(f"Received address: {str(raw_address)} from raw_address")
 
                 self.send(enriched_address)
                 if self.stop_event.is_set():
@@ -59,8 +60,16 @@ def main():
         config.read_file(f)
 
     enricher = Enricher(config)
+    enricher.setDaemon(True)
+    print("Starting enricher")
     enricher.start()
 
+    try:
+        while 1:
+            time.sleep(.1)
+    except KeyboardInterrupt:
+        print("Stopping enricher")
+        enricher.stop()
 
 if __name__ == "__main__":
     main()

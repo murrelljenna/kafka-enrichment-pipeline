@@ -51,7 +51,7 @@ This project includes 3 modules - a producer, an enricher and a consumer. Each m
 
 ### producer.py
 
-Run using `pipenv run producer.py [JSON_FILEPATH]`.
+Run using `pipenv run python ./producer.py [JSON_FILEPATH]`.
 
 Takes a path to a json file containing an array of JSON address objects (like the one above) and submits each one to the first of two kafka topics ('raw\_buildings', 'enriched\_buildings'). Runs once and ends once the last JSON object has been sent.
 
@@ -59,7 +59,7 @@ Any extra keys in the address object will be discarded by the producer. Any addr
 
 ### enricher.py
 
-Run using `pipenv run enricher.py`.
+Run using `pipenv run python ./enricher.py`.
 
 Reads from the first of the two kafka topics - 'raw\_buildings' and forwards to 'enriched\_buildings'. Continually polls until keyboard interrupt.
 
@@ -67,7 +67,7 @@ Actual data enrichment is not yet implemented - the idea is to make calls to the
 
 ### consumer.py
 
-Run using `pipenv run consumer.py`
+Run using `pipenv run python ./consumer.py`
 
 Reads from the second kafka topic ('enriched\_buildings') and stores it in postgres database. Continually polls until keyboard interrupt.
 
@@ -78,3 +78,7 @@ No tests have yet been written for this project.
 Almost all non-trivial code in this project relates to accessing external resources - querying postgres, kafka, reading JSON or the config file. A future set of tests for this project might include:
 
 * An end-to-end test that sends an address to the raw\_address topic and queries the postgres endpoint for that address.
+
+## Some Code Attributions
+
+General structure of Consumer and Enricher threads taken from [dpkp/kafkapython](https://github.com/dpkp/kafka-python/blob/master/example.py)

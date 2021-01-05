@@ -1,4 +1,4 @@
-import sys
+import sys, time
 import json
 import threading
 import configparser
@@ -79,7 +79,16 @@ def main():
     Base.metadata.create_all(db)
 
     consumer = Consumer(config, db)
+    consumer.setDaemon(True)
+    print("Starting consumer")
     consumer.start()
+
+    try:
+        while 1:
+            time.sleep(.1)
+    except KeyboardInterrupt:
+        print("Stopping consumer")
+        consumer.stop()
 
 
 if __name__ == "__main__":
